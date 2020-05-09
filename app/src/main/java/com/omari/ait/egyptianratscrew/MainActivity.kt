@@ -8,17 +8,20 @@ import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import com.omari.ait.egyptianratscrew.models.Card
 import com.omari.ait.egyptianratscrew.controllers.Game
+import com.omari.ait.egyptianratscrew.models.Computer
 import com.omari.ait.egyptianratscrew.models.Player
 import com.omari.ait.egyptianratscrew.util.getCardDrawableURI
 import com.omari.ait.egyptianratscrew.util.unhighlightButton
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.card.view.*
 import kotlin.random.Random
+import kotlin.concurrent.thread
 
 
 class MainActivity : AppCompatActivity() {
 
     lateinit var game: Game
+    var computerMove = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,11 +29,13 @@ class MainActivity : AppCompatActivity() {
 
         val p1 = Player("P1", btnPlayer1Deal, btnPlayer1Slap)
         val p2 = Player("P2", btnPlayer2Deal, btnPlayer2Slap)
+        val cpu1 = Computer("CPU1", null, null, 1000, 1000, null)
 
         game = Game(
             mutableListOf(
                 p1,
-                p2
+                p2,
+                cpu1
             ), this
         )
         
@@ -83,9 +88,11 @@ class MainActivity : AppCompatActivity() {
         card.translationY += (Random.nextFloat() * 200) - 100
         card.ivCard.setImageDrawable(getCardDrawable(c))
         flTableTop.addView(card)
+        game.allComputerSlap()
     }
 
-    fun burnCard(c: Card) {val card = layoutInflater.inflate(R.layout.card, null, false)
+    fun burnCard(c: Card) {
+        val card = layoutInflater.inflate(R.layout.card, null, false)
         card.elevation = -game.burnedCards.size.toFloat()
         card.rotation = (Random.nextFloat() * 80) - 40
         card.translationX = (Random.nextFloat() * 200) - 100

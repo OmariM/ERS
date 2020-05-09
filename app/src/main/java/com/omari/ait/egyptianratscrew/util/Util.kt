@@ -39,10 +39,12 @@ fun getCardDrawableURI(card: Card?) : String {
     else return "@drawable/card_${card.toString().toLowerCase()}"
 }
 
-fun highlightButton(btn: Button) {
+fun highlightButton(btn: Button?) {
+    if (btn == null) return
     btn.setBackgroundColor(Color.rgb(23, 200, 45))
 }
 
-fun unhighlightButton(btn: Button) {
+fun unhighlightButton(btn: Button?) {
+    if (btn == null) return
     btn.setBackgroundColor(Color.rgb(218, 218, 218))
 }

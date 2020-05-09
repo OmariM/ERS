@@ -5,8 +5,10 @@ import android.util.Log
 import android.widget.Toast
 import com.omari.ait.egyptianratscrew.MainActivity
 import com.omari.ait.egyptianratscrew.models.Card
+import com.omari.ait.egyptianratscrew.models.Computer
 import com.omari.ait.egyptianratscrew.models.Player
 import com.omari.ait.egyptianratscrew.util.*
+import kotlin.concurrent.thread
 
 class Game(val players: MutableList<Player>, val context: Context) {
 
@@ -22,6 +24,7 @@ class Game(val players: MutableList<Player>, val context: Context) {
         currentPlayer = players[0]
         currentPlayer.isMyTurn = true
         highlightButton(currentPlayer.dealButton)
+        players.forEach { if (it is Computer) it.game = this  }
         dealCards(getShuffledDeck(), players)
     }
 
@@ -58,8 +61,11 @@ class Game(val players: MutableList<Player>, val context: Context) {
                     unhighlightButton(it.dealButton)
                 }
                 getPrevPlayer().canCollectPile = true
-                highlightButton(getPrevPlayer().slapButton)
-                getPrevPlayer().slapButton.text = "COLLECT"
+                val prevPlayerSlapButton = getPrevPlayer().slapButton
+                if (prevPlayerSlapButton != null) {
+                    highlightButton(prevPlayerSlapButton)
+                    prevPlayerSlapButton.text = "COLLECT"
+                }
             }
         } else {
             currentPlayer = getNextPlayer()
@@ -72,10 +78,14 @@ class Game(val players: MutableList<Player>, val context: Context) {
             val winner = players[0]
             Toast.makeText(context, "The winner is ${winner.name}!", Toast.LENGTH_LONG).show()
         }
+
+        if (currentPlayer is Computer) {
+            computerDealCard(currentPlayer as Computer)
+        }
     }
 
     fun slap(player: Player) {
-        if (pile.size == 0 || player.deck.size == 0) return
+        if (pile.size == 0) return
         if (isDouble() || isSandwich() || player.canCollectPile) {
             players.forEach {
                 it.isMyTurn = false
@@ -85,11 +95,15 @@ class Game(val players: MutableList<Player>, val context: Context) {
             player.canCollectPile
             faceCardCounter = 0 //TODO: you might want to put this in retrieveDeck
             retrieveDeck(player)
-        } else {
+        } else if (player.deck.size != 0) {
             val burnedCard = player.burn() // TODO: use .play() here
             burnedCards.add(burnedCard)
             (context as MainActivity).burnCard(burnedCard)
         }
+    }
+
+    fun canRetrieveDeck(player: Player) : Boolean {
+        return (pile.size != 0) && (isDouble() || isSandwich() || player.canCollectPile)
     }
 
     fun retrieveDeck(player: Player) {
@@ -126,6 +140,34 @@ class Game(val players: MutableList<Player>, val context: Context) {
     fun gameOver() : Boolean {
         cullEmptyPlayers()
         return players.size == 1
+    }
+
+    fun computerDealCard(cpu: Computer) {
+        thread {
+            Thread.sleep(cpu.timeToDeal)
+            (context as MainActivity).runOnUiThread { playCard(cpu) }
+        }
+    }
+
+    fun computerSlap(cpu: Computer) {
+        thread {
+            Thread.sleep(cpu.timeToSlap)
+            if (canRetrieveDeck(cpu)) {
+                (context as MainActivity).runOnUiThread {
+                    slap(cpu)
+                    playCard(cpu)
+                }
+            }
+        }
+    }
+
+    fun allComputerSlap () {
+        players.forEach {
+            if (it is Computer) {
+                Log.d("CPU_SLAP", "${it.canCollectPile}")
+                computerSlap(it)
+            }
+        }
     }
 
 }
