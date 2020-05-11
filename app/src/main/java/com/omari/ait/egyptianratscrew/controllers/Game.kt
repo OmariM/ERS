@@ -9,6 +9,7 @@ import com.omari.ait.egyptianratscrew.models.Computer
 import com.omari.ait.egyptianratscrew.models.Player
 import com.omari.ait.egyptianratscrew.util.*
 import kotlin.concurrent.thread
+import kotlin.random.Random
 
 class Game(val players: MutableList<Player>, val context: Context) {
 
@@ -156,7 +157,10 @@ class Game(val players: MutableList<Player>, val context: Context) {
     fun computerSlap(cpu: Computer) {
         thread {
             cpu.startTime = System.currentTimeMillis()
-            while (cpu.isAlive && System.currentTimeMillis() - cpu.startTime < cpu.timeToSlap) {  }
+            val minTimeToSlap = (cpu.timeToSlap*.8).toLong()
+            val maxTimeToSlap = (cpu.timeToSlap*1.2).toLong()
+            val randTimeToSlap = Random.nextLong(minTimeToSlap, maxTimeToSlap)
+            while (cpu.isAlive && System.currentTimeMillis() - cpu.startTime < randTimeToSlap) {  }
             Log.d("CPU_SLAP", "${cpu.name} is alive: ${cpu.isAlive}")
             if (cpu.isAlive) {
                 (context as MainActivity).runOnUiThread {
