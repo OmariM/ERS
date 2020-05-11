@@ -1,6 +1,7 @@
 package com.omari.ait.egyptianratscrew.adapters
 
 import android.content.Context
+import android.graphics.Color.rgb
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,7 +24,9 @@ class CPUInfoAdapter(val items: MutableList<Computer>, val context: Context) : R
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val currentCPU = items[position]
+        val color = if (currentCPU.isMyTurn) rgb(23, 200, 45) else rgb(255,255,255)
         holder.tvCPUInfo.text = currentCPU.getInfo()
+        holder.itemView.setBackgroundColor(color)
     }
 
     fun addItem(item: Computer) {

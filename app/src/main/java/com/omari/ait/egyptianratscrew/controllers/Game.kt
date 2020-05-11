@@ -29,7 +29,7 @@ class Game(val players: MutableList<Player>, val context: Context) {
         prevPlayer = players[0]
         currentPlayer.isMyTurn = true
         highlightButton(currentPlayer.dealButton)
-        players.forEach { if (it is Computer) it.game = this  }
+        players.forEach { if (it is Computer) it.game = this }
         dealCards(getSmallDeck(15), players)
     }
 
@@ -47,9 +47,11 @@ class Game(val players: MutableList<Player>, val context: Context) {
     }
 
     fun playCard(player: Player) {
+        if (faceCardCounter > 0 && currentPlayer == prevPlayer) gameIsOver == true
         if (!player.isMyTurn || gameIsOver || checkGameOver()) return
         val cardToAdd = player.play()
         pile.add(0, cardToAdd)
+        if (player is Computer) (context as MainActivity).cpuInfoAdapter.updateItem(player)
         (context as MainActivity).addCardToTop(cardToAdd)
         Log.d("GAME", "${player.name} just played $cardToAdd")
         if (isFaceCard(pile[0])) {
@@ -93,6 +95,7 @@ class Game(val players: MutableList<Player>, val context: Context) {
         if (checkGameOver()) return
 
         if (currentPlayer is Computer) {
+            (context as MainActivity).cpuInfoAdapter.updateItem(currentPlayer as Computer)
             computerDealCard(currentPlayer as Computer)
         }
     }
