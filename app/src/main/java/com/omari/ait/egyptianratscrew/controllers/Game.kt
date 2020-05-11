@@ -16,6 +16,7 @@ class Game(val players: MutableList<Player>, val context: Context) {
     val pile : MutableList<Card>
     val burnedCards : MutableList<Card>
     var currentPlayer : Player
+    var prevPlayer : Player
     var faceCardCounter = 0
     var gameIsOver = false
     var validComputerThreads : MutableList<Thread>
@@ -25,45 +26,59 @@ class Game(val players: MutableList<Player>, val context: Context) {
         burnedCards = mutableListOf<Card>()
         validComputerThreads = mutableListOf<Thread>()
         currentPlayer = players[0]
+        prevPlayer = players[0]
         currentPlayer.isMyTurn = true
         highlightButton(currentPlayer.dealButton)
         players.forEach { if (it is Computer) it.game = this  }
-        dealCards(getShuffledDeck(), players)
+        dealCards(getSmallDeck(15), players)
     }
 
-    fun getNextPlayer() : Player {
-        val currentPlayerPosition = players.indexOf(currentPlayer)
-        return players[(currentPlayerPosition + 1) % players.size]
-    }
-
-    fun getPrevPlayer() : Player {
-        val currentPlayerPosition = players.indexOf(currentPlayer)
-        return players[(players.size + currentPlayerPosition - 1) % players.size]
+    fun getNextPlayer(updatePrevPlayer: Boolean = true) : Player {
+        var currentPlayerPosition = players.indexOf(currentPlayer)
+        if (updatePrevPlayer) prevPlayer = players[currentPlayerPosition]
+        var nextPlayer = players[(currentPlayerPosition + 1) % players.size]
+        while (!hasCards(nextPlayer)) {
+            Log.d("NEXT_PLAYER_NO_CARDS", "${nextPlayer.name}")
+            currentPlayerPosition ++
+            nextPlayer = players[(currentPlayerPosition) % players.size]
+        }
+        Log.d("NEXT_PLAYER", "${nextPlayer.name}")
+        return nextPlayer
     }
 
     fun playCard(player: Player) {
-        if (!player.isMyTurn || gameIsOver) return
+        if (!player.isMyTurn || gameIsOver || checkGameOver()) return
         val cardToAdd = player.play()
         pile.add(0, cardToAdd)
+        (context as MainActivity).addCardToTop(cardToAdd)
+        Log.d("GAME", "${player.name} just played $cardToAdd")
         if (isFaceCard(pile[0])) {
-            Log.d("FACE", "${pile[0]} seen, ${getNumTries(pile[0])} tries")
             faceCardCounter = getNumTries(pile[0])
             currentPlayer = getNextPlayer()
             currentPlayer.isMyTurn = true
             highlightButton(currentPlayer.dealButton)
+            Log.d("GAME", "${pile[0]} seen, ${getNumTries(pile[0])} tries, placed by ${prevPlayer.name}")
         } else if (faceCardCounter > 0) {
             currentPlayer = player
             currentPlayer.isMyTurn = true
+            if (!hasCards(currentPlayer)) {
+                unhighlightButton(currentPlayer.dealButton)
+                currentPlayer = getNextPlayer(false)
+                currentPlayer.isMyTurn = true
+                highlightButton(currentPlayer.dealButton)
+            }
             faceCardCounter--
-            Log.d("FACE", "$faceCardCounter tries left")
+            Log.d("GAME", "$faceCardCounter tries left, placed by ${prevPlayer.name}")
             highlightButton(currentPlayer.dealButton)
             if (faceCardCounter == 0) {
                 players.forEach {
                     it.isMyTurn = false
                     unhighlightButton(it.dealButton)
                 }
-                getPrevPlayer().canCollectPile = true
-                val prevPlayerSlapButton = getPrevPlayer().slapButton
+                prevPlayer.canCollectPile = true
+                if (prevPlayer is Computer) computerSlap(prevPlayer as Computer)
+                Log.d("GAME", "${prevPlayer.name} can collect the pile")
+                val prevPlayerSlapButton = prevPlayer.slapButton
                 if (prevPlayerSlapButton != null) {
                     highlightButton(prevPlayerSlapButton)
                     prevPlayerSlapButton.text = "COLLECT"
@@ -75,17 +90,23 @@ class Game(val players: MutableList<Player>, val context: Context) {
             highlightButton(currentPlayer.dealButton)
         }
 
-        (context as MainActivity).addCardToTop(cardToAdd)
-
-        if (gameOver()) {
-            gameIsOver = true
-            val winner = players[0]
-            Toast.makeText(context, "The winner is ${winner.name}!", Toast.LENGTH_LONG).show()
-        }
+        if (checkGameOver()) return
 
         if (currentPlayer is Computer) {
             computerDealCard(currentPlayer as Computer)
         }
+    }
+
+    private fun checkGameOver(): Boolean {
+        val remainingPlayers = playersWithCards()
+
+        if (remainingPlayers.size == 1 && faceCardCounter == 0) {
+            gameIsOver = true
+            val winner = remainingPlayers[0]
+            Toast.makeText(context, "The winner is ${winner.name}!", Toast.LENGTH_LONG).show()
+            return true
+        }
+        return false
     }
 
     fun slap(player: Player) {
@@ -98,11 +119,14 @@ class Game(val players: MutableList<Player>, val context: Context) {
             }
             player.canCollectPile
             faceCardCounter = 0 //TODO: you might want to put this in retrieveDeck
+            Log.d("GAME", "deck slapped by ${player.name}")
             retrieveDeck(player)
         } else if (player.deck.size != 0) {
             val burnedCard = player.burn() // TODO: use .play() here
             burnedCards.add(burnedCard)
             (context as MainActivity).addCardToBottom(burnedCard)
+            Log.d("GAME", "${player.name} burned a $burnedCard")
+            checkGameOver()
         }
     }
 
@@ -138,19 +162,17 @@ class Game(val players: MutableList<Player>, val context: Context) {
         return player.deck.size != 0
     }
 
-    fun cullEmptyPlayers() {
-        players.removeAll { !hasCards(it) }
-    }
-
-    fun gameOver() : Boolean {
-        cullEmptyPlayers()
-        return players.size == 1 && faceCardCounter == 0
+    fun playersWithCards() : List<Player> {
+        return players.filter { hasCards(it) }
     }
 
     fun computerDealCard(cpu: Computer) {
         thread {
             Thread.sleep(cpu.timeToDeal)
-            (context as MainActivity).runOnUiThread { playCard(cpu) }
+            (context as MainActivity).runOnUiThread {
+                playCard(cpu)
+                context.cpuInfoAdapter.updateItem(cpu)
+            }
         }
     }
 
@@ -165,7 +187,8 @@ class Game(val players: MutableList<Player>, val context: Context) {
             if (cpu.isAlive) {
                 (context as MainActivity).runOnUiThread {
                     slap(cpu)
-                    playCard(cpu)
+                    context.cpuInfoAdapter.updateItem(cpu)
+                    computerDealCard(cpu)
                 }
             }
         }
@@ -173,7 +196,6 @@ class Game(val players: MutableList<Player>, val context: Context) {
 
     fun allComputerSlap () {
         Log.d("ALL_CPU_SLAP", "deck: ${pile.subList(0, min(pile.size, 3))}")
-        players.shuffle()
         players.forEach {
             if (it is Computer) {
                 Log.d("ALL_CPU_SLAP", "${it.name} can retrieve deck: ${canRetrieveDeck(it)}")

@@ -12,4 +12,8 @@ class Computer(name: String, dealButton: Button? = null, slapButton: Button? = n
     var isAlive = false
     var startTime : Long = 0
 
+    fun getInfo() : String {
+        return "${this.name}: ${deck.size} cards"
+    }
+
 }

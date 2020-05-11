@@ -7,6 +7,7 @@ open class Player(var name: String, val dealButton: Button?, val slapButton: But
     val deck = mutableListOf<Card>()
     var isMyTurn = false
     var canCollectPile = false
+    var hasCards = true
 
     fun play() : Card {
         isMyTurn = false

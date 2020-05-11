@@ -3,7 +3,10 @@ package com.omari.ait.egyptianratscrew
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.omari.ait.egyptianratscrew.adapters.CPUInfoAdapter
 import com.omari.ait.egyptianratscrew.models.Card
 import com.omari.ait.egyptianratscrew.controllers.Game
 import com.omari.ait.egyptianratscrew.models.Computer
@@ -18,6 +21,7 @@ import kotlin.random.Random
 class MainActivity : AppCompatActivity() {
 
     lateinit var game: Game
+    lateinit var cpuInfoAdapter: CPUInfoAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,15 +30,21 @@ class MainActivity : AppCompatActivity() {
         val p1 = Player("P1", btnPlayer1Deal, btnPlayer1Slap)
         val p2 = Player("P2", btnPlayer2Deal, btnPlayer2Slap)
         val cpu1 = Computer("CPU1", null, null, 1000, 1000, null)
+        val cpu2 = Computer("CPU2", null, null, 1000, 1000, null)
 
-        game = Game(
-            mutableListOf(
-                p1,
-                p2,
-                cpu1
-            ), this
-        )
-        
+        //TODO: get lists from an intent from the menu
+        val players = mutableListOf<Player>(p1, p2)
+        val computers = mutableListOf<Computer>(cpu1, cpu2)
+
+        game = Game((players + computers).toMutableList(), this)
+        cpuInfoAdapter = CPUInfoAdapter(computers, this)
+
+        if (computers.size > 0) {
+            rvCPUCards.visibility = View.VISIBLE
+            rvCPUCards.layoutManager = LinearLayoutManager(this)
+            rvCPUCards.adapter = cpuInfoAdapter
+        }
+
         Log.d("${p1.name}_deck", p1.deck.toString())
         Log.d("${p2.name}_deck", p2.deck.toString())
 
@@ -100,5 +110,9 @@ class MainActivity : AppCompatActivity() {
 
     fun clearCardsFromFrameView() {
         flTableTop.removeAllViews()
+    }
+
+    fun updateCPUInfoRV() {
+
     }
 }
