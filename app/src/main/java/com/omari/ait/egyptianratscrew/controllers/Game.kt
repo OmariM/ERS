@@ -169,6 +169,7 @@ class Game(val players: MutableList<Player>, val context: Context) {
 
     fun allComputerSlap () {
         Log.d("ALL_CPU_SLAP", "deck: ${pile.subList(0, min(pile.size, 3))}")
+        players.shuffle()
         players.forEach {
             if (it is Computer) {
                 Log.d("ALL_CPU_SLAP", "${it.name} can retrieve deck: ${canRetrieveDeck(it)}")
