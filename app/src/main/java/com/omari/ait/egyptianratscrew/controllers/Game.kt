@@ -17,10 +17,12 @@ class Game(val players: MutableList<Player>, val context: Context) {
     var currentPlayer : Player
     var faceCardCounter = 0
     var gameIsOver = false
+    var validComputerThreads : MutableList<Thread>
 
     init {
         pile = mutableListOf<Card>()
         burnedCards = mutableListOf<Card>()
+        validComputerThreads = mutableListOf<Thread>()
         currentPlayer = players[0]
         currentPlayer.isMyTurn = true
         highlightButton(currentPlayer.dealButton)
@@ -41,7 +43,6 @@ class Game(val players: MutableList<Player>, val context: Context) {
     fun playCard(player: Player) {
         if (!player.isMyTurn || gameIsOver) return
         val cardToAdd = player.play()
-        (context as MainActivity).addCard(cardToAdd)
         pile.add(0, cardToAdd)
         if (isFaceCard(pile[0])) {
             Log.d("FACE", "${pile[0]} seen, ${getNumTries(pile[0])} tries")
@@ -73,6 +74,8 @@ class Game(val players: MutableList<Player>, val context: Context) {
             highlightButton(currentPlayer.dealButton)
         }
 
+        (context as MainActivity).addCardToTop(cardToAdd)
+
         if (gameOver()) {
             gameIsOver = true
             val winner = players[0]
@@ -98,7 +101,7 @@ class Game(val players: MutableList<Player>, val context: Context) {
         } else if (player.deck.size != 0) {
             val burnedCard = player.burn() // TODO: use .play() here
             burnedCards.add(burnedCard)
-            (context as MainActivity).burnCard(burnedCard)
+            (context as MainActivity).addCardToBottom(burnedCard)
         }
     }
 
@@ -112,11 +115,12 @@ class Game(val players: MutableList<Player>, val context: Context) {
         currentPlayer = player
         currentPlayer.deck.addAll((pile + burnedCards).reversed())
         pile.clear()
-        (context as MainActivity).retrievePile()
+        (context as MainActivity).clearCardsFromFrameView()
         highlightButton(currentPlayer.dealButton)
         currentPlayer.isMyTurn = true
         currentPlayer.canCollectPile = false
         burnedCards.clear()
+        invalidateCurrentThreads()
     }
 
     fun isDouble() : Boolean {
@@ -139,7 +143,7 @@ class Game(val players: MutableList<Player>, val context: Context) {
 
     fun gameOver() : Boolean {
         cullEmptyPlayers()
-        return players.size == 1
+        return players.size == 1 && faceCardCounter == 0
     }
 
     fun computerDealCard(cpu: Computer) {
@@ -151,8 +155,10 @@ class Game(val players: MutableList<Player>, val context: Context) {
 
     fun computerSlap(cpu: Computer) {
         thread {
-            Thread.sleep(cpu.timeToSlap)
-            if (canRetrieveDeck(cpu)) {
+            cpu.startTime = System.currentTimeMillis()
+            while (cpu.isAlive && System.currentTimeMillis() - cpu.startTime < cpu.timeToSlap) {  }
+            Log.d("CPU_SLAP", "${cpu.name} is alive: ${cpu.isAlive}")
+            if (cpu.isAlive) {
                 (context as MainActivity).runOnUiThread {
                     slap(cpu)
                     playCard(cpu)
@@ -162,10 +168,20 @@ class Game(val players: MutableList<Player>, val context: Context) {
     }
 
     fun allComputerSlap () {
+        Log.d("ALL_CPU_SLAP", "deck: ${pile.subList(0, min(pile.size, 3))}")
         players.forEach {
             if (it is Computer) {
-                Log.d("CPU_SLAP", "${it.canCollectPile}")
-                computerSlap(it)
+                Log.d("ALL_CPU_SLAP", "${it.name} can retrieve deck: ${canRetrieveDeck(it)}")
+                it.isAlive = true
+                if (canRetrieveDeck(it)) computerSlap(it)
+            }
+        }
+    }
+
+    fun invalidateCurrentThreads() {
+        players.forEach {
+            if (it is Computer) {
+                it.isAlive = false
             }
         }
     }

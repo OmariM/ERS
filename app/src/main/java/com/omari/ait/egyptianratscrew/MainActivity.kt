@@ -1,10 +1,8 @@
 package com.omari.ait.egyptianratscrew
 
-import android.graphics.Color.rgb
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
-import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import com.omari.ait.egyptianratscrew.models.Card
 import com.omari.ait.egyptianratscrew.controllers.Game
@@ -15,13 +13,11 @@ import com.omari.ait.egyptianratscrew.util.unhighlightButton
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.card.view.*
 import kotlin.random.Random
-import kotlin.concurrent.thread
 
 
 class MainActivity : AppCompatActivity() {
 
     lateinit var game: Game
-    var computerMove = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,7 +76,7 @@ class MainActivity : AppCompatActivity() {
         return resources.getDrawable(imageResource, null)
     }
 
-    fun addCard(c: Card) {
+    fun addCardToTop(c: Card) {
         val card = layoutInflater.inflate(R.layout.card, null, false)
         card.elevation = game.pile.size.toFloat()
         card.rotation = (Random.nextFloat() * 80) - 40
@@ -88,10 +84,11 @@ class MainActivity : AppCompatActivity() {
         card.translationY += (Random.nextFloat() * 200) - 100
         card.ivCard.setImageDrawable(getCardDrawable(c))
         flTableTop.addView(card)
+        game.invalidateCurrentThreads()
         game.allComputerSlap()
     }
 
-    fun burnCard(c: Card) {
+    fun addCardToBottom(c: Card) {
         val card = layoutInflater.inflate(R.layout.card, null, false)
         card.elevation = -game.burnedCards.size.toFloat()
         card.rotation = (Random.nextFloat() * 80) - 40
@@ -101,7 +98,7 @@ class MainActivity : AppCompatActivity() {
         flTableTop.addView(card)
     }
 
-    fun retrievePile() {
+    fun clearCardsFromFrameView() {
         flTableTop.removeAllViews()
     }
 }

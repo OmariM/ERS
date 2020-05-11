@@ -48,3 +48,9 @@ fun unhighlightButton(btn: Button?) {
     if (btn == null) return
     btn.setBackgroundColor(Color.rgb(218, 218, 218))
 }
+
+// in order to maintain the minimum api requirement of 21 (integer min requires 24)
+fun min(a: Int, b: Int) : Int {
+    if (a < b) return a
+    return b
+}
