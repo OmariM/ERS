@@ -5,7 +5,6 @@ import android.widget.Button
 import com.omari.ait.egyptianratscrew.controllers.Game
 import kotlin.random.Random
 
-// TODO: make game a val
 class Computer(name: String, dealButton: Button? = null, slapButton: Button? = null, var timeToSlap: Long, var timeToDeal: Long, var game: Game? = null) :
     Player(name, dealButton, slapButton) {
 
@@ -13,7 +12,7 @@ class Computer(name: String, dealButton: Button? = null, slapButton: Button? = n
     var startTime : Long = 0
 
     fun getInfo() : String {
-        return "${this.name}: ${deck.size} cards"
+        return "${this.name}: ${deck.size}"
     }
 
 }

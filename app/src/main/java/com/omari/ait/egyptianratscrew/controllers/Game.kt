@@ -47,7 +47,6 @@ class Game(val players: MutableList<Player>, val context: Context) {
     }
 
     fun playCard(player: Player) {
-        if (faceCardCounter > 0 && currentPlayer == prevPlayer) gameIsOver == true
         if (!player.isMyTurn || gameIsOver || checkGameOver()) return
         val cardToAdd = player.play()
         pile.add(0, cardToAdd)
@@ -105,7 +104,10 @@ class Game(val players: MutableList<Player>, val context: Context) {
     private fun checkGameOver(): Boolean {
         val remainingPlayers = playersWithCards()
 
-        if (remainingPlayers.size == 1 && faceCardCounter == 0) {
+        val gameOverFromLastPlayer = remainingPlayers.size == 1 && faceCardCounter == 0
+        val gameOverFromLastPlayerInFaceSequence = faceCardCounter > 0 && currentPlayer == prevPlayer && remainingPlayers.size == 1
+
+        if (gameOverFromLastPlayer || gameOverFromLastPlayerInFaceSequence) {
             gameIsOver = true
             val winner = remainingPlayers[0]
             Toast.makeText(context, "The winner is ${winner.name}!", Toast.LENGTH_LONG).show()
@@ -119,15 +121,15 @@ class Game(val players: MutableList<Player>, val context: Context) {
         if (isDouble() || isSandwich() || player.canCollectPile) {
             players.forEach {
                 it.isMyTurn = false
+                it.canCollectPile = false
                 unhighlightButton(it.slapButton)
                 unhighlightButton(it.dealButton)
             }
-            player.canCollectPile
-            faceCardCounter = 0 //TODO: you might want to put this in retrieveDeck
+            faceCardCounter = 0
             Log.d("GAME", "deck slapped by ${player.name}")
             retrieveDeck(player)
         } else if (player.deck.size != 0) {
-            val burnedCard = player.burn() // TODO: use .play() here
+            val burnedCard = player.burn()
             burnedCards.add(burnedCard)
             (context as ERSGameActivity).addCardToBottom(burnedCard)
             Log.d("GAME", "${player.name} burned a $burnedCard")

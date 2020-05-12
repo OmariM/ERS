@@ -30,12 +30,10 @@ class TwoPlayerActivity : AppCompatActivity(), ERSGameActivity {
 
         val p1 = Player("P1", btnPlayer1Deal, btnPlayer1Slap)
         val p2 = Player("P2", btnPlayer2Deal, btnPlayer2Slap)
-        val cpu1 = Computer("CPU1", null, null, 1000, 1000, null)
-        val cpu2 = Computer("CPU2", null, null, 1000, 1000, null)
 
         //TODO: get lists from an intent from the menu
         val players = mutableListOf<Player>(p1, p2)
-        val computers = mutableListOf<Computer>(cpu1, cpu2)
+        val computers = mutableListOf<Computer>()
 
         game = Game((players + computers).toMutableList(), this)
         cpuInfoAdapter = CPUInfoAdapter(computers, this)
