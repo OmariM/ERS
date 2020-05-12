@@ -3,7 +3,7 @@ package com.omari.ait.egyptianratscrew.controllers
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
-import com.omari.ait.egyptianratscrew.MainActivity
+import androidx.appcompat.app.AppCompatActivity
 import com.omari.ait.egyptianratscrew.models.Card
 import com.omari.ait.egyptianratscrew.models.Computer
 import com.omari.ait.egyptianratscrew.models.Player
@@ -30,7 +30,7 @@ class Game(val players: MutableList<Player>, val context: Context) {
         currentPlayer.isMyTurn = true
         highlightButton(currentPlayer.dealButton)
         players.forEach { if (it is Computer) it.game = this }
-        dealCards(getSmallDeck(15), players)
+        dealCards(getShuffledDeck(), players)
     }
 
     fun getNextPlayer(updatePrevPlayer: Boolean = true) : Player {
@@ -51,8 +51,8 @@ class Game(val players: MutableList<Player>, val context: Context) {
         if (!player.isMyTurn || gameIsOver || checkGameOver()) return
         val cardToAdd = player.play()
         pile.add(0, cardToAdd)
-        if (player is Computer) (context as MainActivity).cpuInfoAdapter.updateItem(player)
-        (context as MainActivity).addCardToTop(cardToAdd)
+        if (player is Computer) (context as ERSGameActivity).cpuInfoAdapter.updateItem(player)
+        (context as ERSGameActivity).addCardToTop(cardToAdd)
         Log.d("GAME", "${player.name} just played $cardToAdd")
         if (isFaceCard(pile[0])) {
             faceCardCounter = getNumTries(pile[0])
@@ -65,6 +65,8 @@ class Game(val players: MutableList<Player>, val context: Context) {
             currentPlayer.isMyTurn = true
             if (!hasCards(currentPlayer)) {
                 unhighlightButton(currentPlayer.dealButton)
+                currentPlayer.isMyTurn = false
+                if (currentPlayer is Computer) (context as ERSGameActivity).cpuInfoAdapter.updateItem(currentPlayer as Computer)
                 currentPlayer = getNextPlayer(false)
                 currentPlayer.isMyTurn = true
                 highlightButton(currentPlayer.dealButton)
@@ -95,7 +97,7 @@ class Game(val players: MutableList<Player>, val context: Context) {
         if (checkGameOver()) return
 
         if (currentPlayer is Computer) {
-            (context as MainActivity).cpuInfoAdapter.updateItem(currentPlayer as Computer)
+            (context as ERSGameActivity).cpuInfoAdapter.updateItem(currentPlayer as Computer)
             computerDealCard(currentPlayer as Computer)
         }
     }
@@ -127,7 +129,7 @@ class Game(val players: MutableList<Player>, val context: Context) {
         } else if (player.deck.size != 0) {
             val burnedCard = player.burn() // TODO: use .play() here
             burnedCards.add(burnedCard)
-            (context as MainActivity).addCardToBottom(burnedCard)
+            (context as ERSGameActivity).addCardToBottom(burnedCard)
             Log.d("GAME", "${player.name} burned a $burnedCard")
             checkGameOver()
         }
@@ -138,12 +140,14 @@ class Game(val players: MutableList<Player>, val context: Context) {
     }
 
     fun retrieveDeck(player: Player) {
-        if (player.canCollectPile)
-        players.forEach { it.isMyTurn = false }
+        if (player.canCollectPile) players.forEach {
+            it.isMyTurn = false
+            it.canCollectPile = false
+        }
         currentPlayer = player
         currentPlayer.deck.addAll((pile + burnedCards).reversed())
         pile.clear()
-        (context as MainActivity).clearCardsFromFrameView()
+        (context as ERSGameActivity).clearCardsFromFrameView()
         highlightButton(currentPlayer.dealButton)
         currentPlayer.isMyTurn = true
         currentPlayer.canCollectPile = false
@@ -172,9 +176,9 @@ class Game(val players: MutableList<Player>, val context: Context) {
     fun computerDealCard(cpu: Computer) {
         thread {
             Thread.sleep(cpu.timeToDeal)
-            (context as MainActivity).runOnUiThread {
+            (context as AppCompatActivity).runOnUiThread {
                 playCard(cpu)
-                context.cpuInfoAdapter.updateItem(cpu)
+                (context as ERSGameActivity).cpuInfoAdapter.updateItem(cpu)
             }
         }
     }
@@ -188,9 +192,9 @@ class Game(val players: MutableList<Player>, val context: Context) {
             while (cpu.isAlive && System.currentTimeMillis() - cpu.startTime < randTimeToSlap) {  }
             Log.d("CPU_SLAP", "${cpu.name} is alive: ${cpu.isAlive}")
             if (cpu.isAlive) {
-                (context as MainActivity).runOnUiThread {
+                (context as AppCompatActivity).runOnUiThread {
                     slap(cpu)
-                    context.cpuInfoAdapter.updateItem(cpu)
+                    (context as ERSGameActivity).cpuInfoAdapter.updateItem(cpu)
                     computerDealCard(cpu)
                 }
             }

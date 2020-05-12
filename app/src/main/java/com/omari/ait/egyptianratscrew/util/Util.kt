@@ -21,8 +21,9 @@ fun getSmallDeck(size: Int) : MutableList<Card> {
 }
 
 fun dealCards(cards: MutableList<Card>, players: MutableList<Player>) {
-    var piles = cards.chunked(cards.size / players.size) { pile: List<Card> -> pile.toMutableList() }.toMutableList()
-    players.forEach { it.deck.addAll(piles.removeAt(0))}
+    for (i in 0 until cards.size) {
+        players[i % players.size].deck.add(cards[i])
+    }
 }
 
 fun isFaceCard(card: Card) : Boolean {
