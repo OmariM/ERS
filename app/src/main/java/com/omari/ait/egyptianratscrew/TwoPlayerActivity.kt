@@ -31,7 +31,6 @@ class TwoPlayerActivity : AppCompatActivity(), ERSGameActivity {
         val p1 = Player("P1", btnPlayer1Deal, btnPlayer1Slap)
         val p2 = Player("P2", btnPlayer2Deal, btnPlayer2Slap)
 
-        //TODO: get lists from an intent from the menu
         val players = mutableListOf<Player>(p1, p2)
         val computers = mutableListOf<Computer>()
 
@@ -68,14 +67,14 @@ class TwoPlayerActivity : AppCompatActivity(), ERSGameActivity {
             game.slap(p1)
             btnPlayer1Deal.text = "${p1.deck.size}"
             Log.d("${p1.name}_deck", p1.deck.toString())
-            btnPlayer1Slap.text = "SLAP"
+            btnPlayer1Slap.text = getString(R.string.button_slap)
         }
 
         btnPlayer2Slap.setOnClickListener {
             game.slap(p2)
             btnPlayer2Deal.text = "${p2.deck.size}"
             Log.d("${p2.name}_deck", p2.deck.toString())
-            btnPlayer2Slap.text = "SLAP"
+            btnPlayer2Slap.text = getString(R.string.button_slap)
         }
     }
 

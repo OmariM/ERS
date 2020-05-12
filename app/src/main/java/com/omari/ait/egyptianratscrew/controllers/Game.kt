@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.omari.ait.egyptianratscrew.R
 import com.omari.ait.egyptianratscrew.models.Card
 import com.omari.ait.egyptianratscrew.models.Computer
 import com.omari.ait.egyptianratscrew.models.Player
@@ -48,50 +49,12 @@ class Game(val players: MutableList<Player>, val context: Context) {
 
     fun playCard(player: Player) {
         if (!player.isMyTurn || gameIsOver || checkGameOver()) return
-        val cardToAdd = player.play()
-        pile.add(0, cardToAdd)
-        if (player is Computer) (context as ERSGameActivity).cpuInfoAdapter.updateItem(player)
-        (context as ERSGameActivity).addCardToTop(cardToAdd)
-        Log.d("GAME", "${player.name} just played $cardToAdd")
-        if (isFaceCard(pile[0])) {
-            faceCardCounter = getNumTries(pile[0])
-            currentPlayer = getNextPlayer()
-            currentPlayer.isMyTurn = true
-            highlightButton(currentPlayer.dealButton)
-            Log.d("GAME", "${pile[0]} seen, ${getNumTries(pile[0])} tries, placed by ${prevPlayer.name}")
-        } else if (faceCardCounter > 0) {
-            currentPlayer = player
-            currentPlayer.isMyTurn = true
-            if (!hasCards(currentPlayer)) {
-                unhighlightButton(currentPlayer.dealButton)
-                currentPlayer.isMyTurn = false
-                if (currentPlayer is Computer) (context as ERSGameActivity).cpuInfoAdapter.updateItem(currentPlayer as Computer)
-                currentPlayer = getNextPlayer(false)
-                currentPlayer.isMyTurn = true
-                highlightButton(currentPlayer.dealButton)
-            }
-            faceCardCounter--
-            Log.d("GAME", "$faceCardCounter tries left, placed by ${prevPlayer.name}")
-            highlightButton(currentPlayer.dealButton)
-            if (faceCardCounter == 0) {
-                players.forEach {
-                    it.isMyTurn = false
-                    unhighlightButton(it.dealButton)
-                }
-                prevPlayer.canCollectPile = true
-                if (prevPlayer is Computer) computerSlap(prevPlayer as Computer)
-                Log.d("GAME", "${prevPlayer.name} can collect the pile")
-                val prevPlayerSlapButton = prevPlayer.slapButton
-                if (prevPlayerSlapButton != null) {
-                    highlightButton(prevPlayerSlapButton)
-                    prevPlayerSlapButton.text = "COLLECT"
-                }
-            }
-        } else {
-            currentPlayer = getNextPlayer()
-            currentPlayer.isMyTurn = true
-            highlightButton(currentPlayer.dealButton)
-        }
+
+        dealCard()
+
+        if (isFaceCard(pile[0])) handleDealtCardIsFaceCard()
+        else if (faceCardCounter > 0) handleInFaceCardStreak()
+        else goToNextPlayer()
 
         if (checkGameOver()) return
 
@@ -101,13 +64,69 @@ class Game(val players: MutableList<Player>, val context: Context) {
         }
     }
 
+    private fun handleEndFaceCardStreak() {
+        players.forEach {
+            it.isMyTurn = false
+            unhighlightButton(it.dealButton)
+        }
+        prevPlayer.canCollectPile = true
+        if (prevPlayer is Computer) computerSlap(prevPlayer as Computer)
+        Log.d("GAME", "${prevPlayer.name} can collect the pile")
+        val prevPlayerSlapButton = prevPlayer.slapButton
+        if (prevPlayerSlapButton != null) {
+            highlightButton(prevPlayerSlapButton)
+            prevPlayerSlapButton.text = context.getString(R.string.button_collect)
+        }
+    }
+
+    private fun handleInFaceCardStreak() {
+        currentPlayer.isMyTurn = true
+        if (!hasCards(currentPlayer)) {
+            unhighlightButton(currentPlayer.dealButton)
+            currentPlayer.isMyTurn = false
+            if (currentPlayer is Computer) {
+                (context as ERSGameActivity).cpuInfoAdapter.updateItem(currentPlayer as Computer)
+            }
+            currentPlayer = getNextPlayer(false)
+            currentPlayer.isMyTurn = true
+            highlightButton(currentPlayer.dealButton)
+        }
+        faceCardCounter--
+        Log.d("GAME", "$faceCardCounter tries left, placed by ${prevPlayer.name}")
+        highlightButton(currentPlayer.dealButton)
+        if (faceCardCounter == 0) handleEndFaceCardStreak()
+    }
+
+    private fun handleDealtCardIsFaceCard() {
+        faceCardCounter = getNumTries(pile[0])
+        goToNextPlayer()
+        Log.d(
+            "GAME",
+            "${pile[0]} seen, ${getNumTries(pile[0])} tries, placed by ${prevPlayer.name}"
+        )
+    }
+
+    private fun goToNextPlayer() {
+        currentPlayer = getNextPlayer()
+        currentPlayer.isMyTurn = true
+        highlightButton(currentPlayer.dealButton)
+    }
+
+    private fun dealCard() {
+        val cardToAdd = currentPlayer.play()
+        pile.add(0, cardToAdd)
+        if (currentPlayer is Computer) (context as ERSGameActivity).cpuInfoAdapter.updateItem(currentPlayer as Computer)
+        (context as ERSGameActivity).addCardToTop(cardToAdd)
+        Log.d("GAME", "${currentPlayer.name} just played $cardToAdd")
+    }
+
     private fun checkGameOver(): Boolean {
         val remainingPlayers = playersWithCards()
 
-        val gameOverFromLastPlayer = remainingPlayers.size == 1 && faceCardCounter == 0
-        val gameOverFromLastPlayerInFaceSequence = faceCardCounter > 0 && currentPlayer == prevPlayer && remainingPlayers.size == 1
+        val gameOverLastPlayer = remainingPlayers.size == 1 && faceCardCounter == 0
+        val gameOverLastPlayerInFaceSequence = faceCardCounter > 0 && currentPlayer == prevPlayer && remainingPlayers.size == 1
 
-        if (gameOverFromLastPlayer || gameOverFromLastPlayerInFaceSequence) {
+        if (gameOverLastPlayer || gameOverLastPlayerInFaceSequence) {
             gameIsOver = true
             val winner = remainingPlayers[0]
             Toast.makeText(context, "The winner is ${winner.name}!", Toast.LENGTH_LONG).show()
@@ -119,22 +138,30 @@ class Game(val players: MutableList<Player>, val context: Context) {
     fun slap(player: Player) {
         if (pile.size == 0) return
         if (isDouble() || isSandwich() || player.canCollectPile) {
-            players.forEach {
-                it.isMyTurn = false
-                it.canCollectPile = false
-                unhighlightButton(it.slapButton)
-                unhighlightButton(it.dealButton)
-            }
-            faceCardCounter = 0
-            Log.d("GAME", "deck slapped by ${player.name}")
-            retrieveDeck(player)
+            handleValidSlap(player)
         } else if (player.deck.size != 0) {
-            val burnedCard = player.burn()
-            burnedCards.add(burnedCard)
-            (context as ERSGameActivity).addCardToBottom(burnedCard)
-            Log.d("GAME", "${player.name} burned a $burnedCard")
-            checkGameOver()
+            handleBurn(player)
         }
+    }
+
+    private fun handleValidSlap(player: Player) {
+        players.forEach {
+            it.isMyTurn = false
+            it.canCollectPile = false
+            unhighlightButton(it.slapButton)
+            unhighlightButton(it.dealButton)
+        }
+        faceCardCounter = 0
+        Log.d("GAME", "deck slapped by ${player.name}")
+        retrieveDeck(player)
+    }
+
+    private fun handleBurn(player: Player) {
+        val burnedCard = player.burn()
+        burnedCards.add(burnedCard)
+        (context as ERSGameActivity).addCardToBottom(burnedCard)
+        Log.d("GAME", "${player.name} burned a $burnedCard")
+        checkGameOver()
     }
 
     fun canRetrieveDeck(player: Player) : Boolean {

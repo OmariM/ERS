@@ -30,11 +30,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnMulti.setOnClickListener {
-            Toast.makeText(this, "Coming Soon...!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.toast_coming_soon), Toast.LENGTH_SHORT).show()
         }
 
         btnProfile.setOnClickListener {
-            Toast.makeText(this, "Coming Soon...!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.toast_coming_soon), Toast.LENGTH_SHORT).show()
         }
 
         ivCard1.setOnClickListener {

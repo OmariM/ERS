@@ -63,7 +63,7 @@ class OnePlayerActivity : AppCompatActivity(), ERSGameActivity {
             game.slap(p1)
             btnPlayer1Deal.text = "${p1.deck.size}"
             Log.d("${p1.name}_deck", p1.deck.toString())
-            btnPlayer1Slap.text = "SLAP"
+            btnPlayer1Slap.text = getString(R.string.button_slap)
         }
     }
 
