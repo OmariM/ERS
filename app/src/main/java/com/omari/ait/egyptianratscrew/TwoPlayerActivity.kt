@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.snackbar.Snackbar
 import com.omari.ait.egyptianratscrew.adapters.CPUInfoAdapter
 import com.omari.ait.egyptianratscrew.models.Card
 import com.omari.ait.egyptianratscrew.controllers.Game
@@ -24,12 +25,17 @@ class TwoPlayerActivity : AppCompatActivity(), ERSGameActivity {
     override lateinit var game: Game
     override lateinit var cpuInfoAdapter: CPUInfoAdapter
 
+    val p1 = Player("Player 1")
+    val p2 = Player("Player 2")
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_two_player)
 
-        val p1 = Player("P1", btnPlayer1Deal, btnPlayer1Slap)
-        val p2 = Player("P2", btnPlayer2Deal, btnPlayer2Slap)
+        p1.dealButton = btnPlayer1Deal
+        p1.slapButton = btnPlayer1Slap
+        p2.dealButton = btnPlayer2Deal
+        p2.slapButton = btnPlayer2Slap
 
         val players = mutableListOf<Player>(p1, p2)
         val computers = mutableListOf<Computer>()
@@ -108,5 +114,21 @@ class TwoPlayerActivity : AppCompatActivity(), ERSGameActivity {
 
     override fun clearCardsFromFrameView() {
         flTableTop.removeAllViews()
+    }
+
+    override fun gameOver(name: String) {
+        Snackbar.make(
+            layoutTwoPlayer,
+            resources.getString(R.string.win_toast_text, name),
+            Snackbar.LENGTH_INDEFINITE
+        ).setAction(resources.getString(
+            R.string.play_again_toast_button_string
+        ), View.OnClickListener {
+            clearCardsFromFrameView()
+            game.reset()
+            game.players.forEach { if (it is Computer) cpuInfoAdapter.updateItem(it) }
+            btnPlayer1Deal.text = "${p1.deck.size}"
+            btnPlayer2Deal.text = "${p2.deck.size}"
+        }).show()
     }
 }

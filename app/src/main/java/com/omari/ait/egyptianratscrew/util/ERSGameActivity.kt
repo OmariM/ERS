@@ -13,8 +13,9 @@ interface ERSGameActivity {
     var game: Game
     var cpuInfoAdapter: CPUInfoAdapter
 
-    fun getCardDrawable(card: Card?) : Drawable
+    fun getCardDrawable(c: Card?) : Drawable
     fun addCardToTop(c: Card)
     fun addCardToBottom(c: Card)
     fun clearCardsFromFrameView()
+    fun gameOver(s: String)
 }

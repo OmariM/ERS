@@ -2,7 +2,7 @@ package com.omari.ait.egyptianratscrew.models
 
 import android.widget.Button
 
-open class Player(var name: String, val dealButton: Button?, val slapButton: Button?) {
+open class Player(var name: String, var dealButton: Button? = null, var slapButton: Button? = null) {
 
     val deck = mutableListOf<Card>()
     var isMyTurn = false

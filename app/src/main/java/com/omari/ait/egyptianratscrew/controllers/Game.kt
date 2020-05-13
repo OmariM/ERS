@@ -2,8 +2,10 @@ package com.omari.ait.egyptianratscrew.controllers
 
 import android.content.Context
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.snackbar.Snackbar
 import com.omari.ait.egyptianratscrew.R
 import com.omari.ait.egyptianratscrew.models.Card
 import com.omari.ait.egyptianratscrew.models.Computer
@@ -129,7 +131,7 @@ class Game(val players: MutableList<Player>, val context: Context) {
         if (gameOverLastPlayer || gameOverLastPlayerInFaceSequence) {
             gameIsOver = true
             val winner = remainingPlayers[0]
-            Toast.makeText(context, "The winner is ${winner.name}!", Toast.LENGTH_LONG).show()
+            (context as ERSGameActivity).gameOver(winner.name)
             return true
         }
         return false
@@ -247,6 +249,27 @@ class Game(val players: MutableList<Player>, val context: Context) {
                 it.isAlive = false
             }
         }
+    }
+
+    fun reset() {
+        pile.clear()
+        burnedCards.clear()
+        validComputerThreads.clear()
+        faceCardCounter = 0
+        players.forEach {
+            it.deck.clear()
+            it.canCollectPile = false
+            it.isMyTurn = false
+            unhighlightButton(it.dealButton)
+            unhighlightButton(it.slapButton)
+            if (it is Computer) it.isAlive = false
+        }
+        currentPlayer = players[0]
+        prevPlayer = players[0]
+        currentPlayer.isMyTurn = true
+        highlightButton(currentPlayer.dealButton)
+        dealCards(getShuffledDeck(), players)
+        gameIsOver = false
     }
 
 }

@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".OnePlayerActivity">
+    tools:context=".OnePlayerActivity"
+    android:id="@+id/layoutOnePlayer">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvCPUCards"

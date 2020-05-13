@@ -3,4 +3,6 @@
     <string name="button_collect">COLLECT</string>
     <string name="toast_coming_soon">Coming Soon...!</string>
     <string name="button_slap">SLAP</string>
+    <string name="play_again_toast_button_string">Play Again?</string>
+    <string name="win_toast_text">"%1$s is the winner!"</string>
 </resources>

@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.snackbar.Snackbar
 import com.omari.ait.egyptianratscrew.adapters.CPUInfoAdapter
 import com.omari.ait.egyptianratscrew.controllers.Game
 import com.omari.ait.egyptianratscrew.models.Card
@@ -14,7 +15,7 @@ import com.omari.ait.egyptianratscrew.models.Player
 import com.omari.ait.egyptianratscrew.util.ERSGameActivity
 import com.omari.ait.egyptianratscrew.util.getCardDrawableURI
 import com.omari.ait.egyptianratscrew.util.unhighlightButton
-import kotlinx.android.synthetic.main.activity_two_player.*
+import kotlinx.android.synthetic.main.activity_one_player.*
 import kotlinx.android.synthetic.main.card.view.*
 import kotlin.random.Random
 
@@ -22,12 +23,15 @@ class OnePlayerActivity : AppCompatActivity(), ERSGameActivity {
 
     override lateinit var game: Game
     override lateinit var cpuInfoAdapter: CPUInfoAdapter
+    val p1 = Player("Player 1")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_one_player)
 
-        val p1 = Player("Omari", btnPlayer1Deal, btnPlayer1Slap)
+        p1.dealButton = btnPlayer1Deal
+        p1.slapButton = btnPlayer1Slap
+
         val cpu1 = Computer("Marvin", null, null, 1000, 1000, null)
         val cpu2 = Computer("Cleo", null, null, 1000, 1000, null)
         val cpu3 = Computer("Adrian", null, null, 1000, 1000, null)
@@ -97,5 +101,20 @@ class OnePlayerActivity : AppCompatActivity(), ERSGameActivity {
 
     override fun clearCardsFromFrameView() {
         flTableTop.removeAllViews()
+    }
+
+    override fun gameOver(name: String) {
+        Snackbar.make(
+            layoutOnePlayer,
+            resources.getString(R.string.win_toast_text, name),
+            Snackbar.LENGTH_INDEFINITE
+        ).setAction(resources.getString(
+            R.string.play_again_toast_button_string
+        ), View.OnClickListener {
+            clearCardsFromFrameView()
+            game.reset()
+            game.players.forEach { if (it is Computer) cpuInfoAdapter.updateItem(it) }
+            btnPlayer1Deal.text = "${p1.deck.size}"
+        }).show()
     }
 }
