@@ -2,10 +2,7 @@ package com.omari.ait.egyptianratscrew.controllers
 
 import android.content.Context
 import android.util.Log
-import android.view.View
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.snackbar.Snackbar
 import com.omari.ait.egyptianratscrew.R
 import com.omari.ait.egyptianratscrew.models.Card
 import com.omari.ait.egyptianratscrew.models.Computer
@@ -16,13 +13,13 @@ import kotlin.random.Random
 
 class Game(val players: MutableList<Player>, val context: Context) {
 
-    val pile : MutableList<Card>
-    val burnedCards : MutableList<Card>
-    var currentPlayer : Player
-    var prevPlayer : Player
+    val pile: MutableList<Card>
+    val burnedCards: MutableList<Card>
+    var currentPlayer: Player
+    var prevPlayer: Player
     var faceCardCounter = 0
     var gameIsOver = false
-    var validComputerThreads : MutableList<Thread>
+    var validComputerThreads: MutableList<Thread>
 
     init {
         pile = mutableListOf<Card>()
@@ -36,13 +33,13 @@ class Game(val players: MutableList<Player>, val context: Context) {
         dealCards(getShuffledDeck(), players)
     }
 
-    fun getNextPlayer(updatePrevPlayer: Boolean = true) : Player {
+    fun getNextPlayer(updatePrevPlayer: Boolean = true): Player {
         var currentPlayerPosition = players.indexOf(currentPlayer)
         if (updatePrevPlayer) prevPlayer = players[currentPlayerPosition]
         var nextPlayer = players[(currentPlayerPosition + 1) % players.size]
         while (!hasCards(nextPlayer)) {
             Log.d("NEXT_PLAYER_NO_CARDS", "${nextPlayer.name}")
-            currentPlayerPosition ++
+            currentPlayerPosition++
             nextPlayer = players[(currentPlayerPosition) % players.size]
         }
         Log.d("NEXT_PLAYER", "${nextPlayer.name}")
@@ -117,7 +114,9 @@ class Game(val players: MutableList<Player>, val context: Context) {
     private fun dealCard() {
         val cardToAdd = currentPlayer.play()
         pile.add(0, cardToAdd)
-        if (currentPlayer is Computer) (context as ERSGameActivity).cpuInfoAdapter.updateItem(currentPlayer as Computer)
+        if (currentPlayer is Computer) (context as ERSGameActivity).cpuInfoAdapter.updateItem(
+            currentPlayer as Computer
+        )
         (context as ERSGameActivity).addCardToTop(cardToAdd)
         Log.d("GAME", "${currentPlayer.name} just played $cardToAdd")
     }
@@ -126,7 +125,8 @@ class Game(val players: MutableList<Player>, val context: Context) {
         val remainingPlayers = playersWithCards()
 
         val gameOverLastPlayer = remainingPlayers.size == 1 && faceCardCounter == 0
-        val gameOverLastPlayerInFaceSequence = faceCardCounter > 0 && currentPlayer == prevPlayer && remainingPlayers.size == 1
+        val gameOverLastPlayerInFaceSequence =
+            faceCardCounter > 0 && currentPlayer == prevPlayer && remainingPlayers.size == 1
 
         if (gameOverLastPlayer || gameOverLastPlayerInFaceSequence) {
             gameIsOver = true
@@ -166,7 +166,7 @@ class Game(val players: MutableList<Player>, val context: Context) {
         checkGameOver()
     }
 
-    fun canRetrieveDeck(player: Player) : Boolean {
+    fun canRetrieveDeck(player: Player): Boolean {
         return (pile.size != 0) && (isDouble() || isSandwich() || player.canCollectPile)
     }
 
@@ -186,21 +186,21 @@ class Game(val players: MutableList<Player>, val context: Context) {
         invalidateCurrentThreads()
     }
 
-    fun isDouble() : Boolean {
+    fun isDouble(): Boolean {
         if (pile.size < 2) return false
         return pile[0].value == pile[1].value
     }
 
-    fun isSandwich() : Boolean {
+    fun isSandwich(): Boolean {
         if (pile.size < 3) return false
         return pile[0].value == pile[2].value
     }
 
-    fun hasCards(player: Player) : Boolean {
+    fun hasCards(player: Player): Boolean {
         return player.deck.size != 0
     }
 
-    fun playersWithCards() : List<Player> {
+    fun playersWithCards(): List<Player> {
         return players.filter { hasCards(it) }
     }
 
@@ -217,10 +217,11 @@ class Game(val players: MutableList<Player>, val context: Context) {
     fun computerSlap(cpu: Computer) {
         thread {
             cpu.startTime = System.currentTimeMillis()
-            val minTimeToSlap = (cpu.timeToSlap*.8).toLong()
-            val maxTimeToSlap = (cpu.timeToSlap*1.2).toLong()
+            val minTimeToSlap = (cpu.timeToSlap * .8).toLong()
+            val maxTimeToSlap = (cpu.timeToSlap * 1.2).toLong()
             val randTimeToSlap = Random.nextLong(minTimeToSlap, maxTimeToSlap)
-            while (cpu.isAlive && System.currentTimeMillis() - cpu.startTime < randTimeToSlap) {  }
+            while (cpu.isAlive && System.currentTimeMillis() - cpu.startTime < randTimeToSlap) {
+            }
             Log.d("CPU_SLAP", "${cpu.name} is alive: ${cpu.isAlive}")
             if (cpu.isAlive) {
                 (context as AppCompatActivity).runOnUiThread {
@@ -232,7 +233,7 @@ class Game(val players: MutableList<Player>, val context: Context) {
         }
     }
 
-    fun allComputerSlap () {
+    fun allComputerSlap() {
         Log.d("ALL_CPU_SLAP", "deck: ${pile.subList(0, min(pile.size, 3))}")
         players.forEach {
             if (it is Computer) {

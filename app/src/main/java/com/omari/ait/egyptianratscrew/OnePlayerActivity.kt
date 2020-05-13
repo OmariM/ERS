@@ -1,10 +1,10 @@
 package com.omari.ait.egyptianratscrew
 
 import android.graphics.drawable.Drawable
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.omari.ait.egyptianratscrew.adapters.CPUInfoAdapter
@@ -71,7 +71,7 @@ class OnePlayerActivity : AppCompatActivity(), ERSGameActivity {
         }
     }
 
-    override fun getCardDrawable(card: Card?) : Drawable {
+    override fun getCardDrawable(card: Card?): Drawable {
         val uri = getCardDrawableURI(card)
         val imageResource = resources.getIdentifier(uri, null, packageName)
         return resources.getDrawable(imageResource, null)

@@ -2,10 +2,9 @@ package com.omari.ait.egyptianratscrew
 
 import android.content.Intent
 import android.graphics.drawable.Drawable
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.omari.ait.egyptianratscrew.models.Card
 import com.omari.ait.egyptianratscrew.util.getCardDrawableURI
 import com.omari.ait.egyptianratscrew.util.getSmallDeck
@@ -49,8 +48,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
-    fun getCardDrawable(card: Card?) : Drawable {
+    fun getCardDrawable(card: Card?): Drawable {
         val uri = getCardDrawableURI(card)
         val imageResource = resources.getIdentifier(uri, null, packageName)
         return resources.getDrawable(imageResource, null)

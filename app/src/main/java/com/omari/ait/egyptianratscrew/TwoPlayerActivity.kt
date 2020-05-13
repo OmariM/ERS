@@ -8,8 +8,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.omari.ait.egyptianratscrew.adapters.CPUInfoAdapter
-import com.omari.ait.egyptianratscrew.models.Card
 import com.omari.ait.egyptianratscrew.controllers.Game
+import com.omari.ait.egyptianratscrew.models.Card
 import com.omari.ait.egyptianratscrew.models.Computer
 import com.omari.ait.egyptianratscrew.models.Player
 import com.omari.ait.egyptianratscrew.util.ERSGameActivity
@@ -84,7 +84,7 @@ class TwoPlayerActivity : AppCompatActivity(), ERSGameActivity {
         }
     }
 
-    override fun getCardDrawable(card: Card?) : Drawable {
+    override fun getCardDrawable(card: Card?): Drawable {
         val uri = getCardDrawableURI(card)
         val imageResource = resources.getIdentifier(uri, null, packageName)
         return resources.getDrawable(imageResource, null)
