@@ -14,6 +14,8 @@ Please have mercy on me. I've only been doing Android dev in Kotlin for about 4 
 - when creating a single player game, user can choose how many bots they want and 
 - user can have a profile to save stats like slap time or something
 - have settings where the user can enable ~~stupid~~ extra game rules like slapping on marriages, 10s, and sums of 10
+- add a splash screen
+- add animations to make things more realistic
 - persistant storage / pausing local games
 - implement local multiplayer via UDP server?
 - implement online multiplayer via UDP server???? massive stretch goal. if anyone has ideas i'd love to hear them
